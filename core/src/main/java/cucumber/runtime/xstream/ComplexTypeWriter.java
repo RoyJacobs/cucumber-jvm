@@ -11,7 +11,7 @@ import static java.util.Arrays.asList;
 
 public class ComplexTypeWriter extends CellWriter {
     private final List<String> columnNames;
-    private Map<String, String> fields = new LinkedHashMap<String, String>();
+    private final Map<String, String> fields = new LinkedHashMap<String, String>();
     private String currentKey;
 
     private int nodeDepth = 0;
@@ -48,9 +48,7 @@ public class ComplexTypeWriter extends CellWriter {
 
     @Override
     public void startNode(String name) {
-        if (nodeDepth == 1) {
-            currentKey = name;
-        }
+        currentKey = name;
         nodeDepth++;
     }
 
@@ -60,7 +58,10 @@ public class ComplexTypeWriter extends CellWriter {
 
     @Override
     public void setValue(String value) {
-        fields.put(currentKey, value == null ? "" : value);
+        // Add all simple types at level 2. nodeDepth 1 is the root node.
+        if (nodeDepth == 2) {
+            fields.put(currentKey, value == null ? "" : value);
+        }
     }
 
     @Override

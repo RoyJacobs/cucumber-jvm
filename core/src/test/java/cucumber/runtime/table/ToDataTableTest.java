@@ -7,13 +7,19 @@ import cucumber.runtime.xstream.LocalizedXStreams;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -38,6 +44,25 @@ public class ToDataTableTest {
                 "      | 3,000   | Frank Zappa | 21/12/1940 |\n" +
                 "", table.toString());
     }
+
+    @Test
+    public void converts_only_simple_top_level_fields_of_object_to_table() throws ParseException {
+        RelationPojo relation = new RelationPojo();
+        relation.id = 12;
+        relation.user = new UserPojo(0);
+        relation.user.credits = 1000;
+        relation.user.name = "Tom Scott";
+        relation.user.birthDate = new SimpleDateFormat("yyyy-MM-dd").parse("1984-01-01");
+        relation.created = new SimpleDateFormat("yyyy-MM-dd").parse("2000-01-01");
+        relation.tags = new HashSet<String>(Arrays.asList("A","B", "C"));
+
+        DataTable table = tc.toTable(singletonList(relation));
+        assertEquals("" +
+            "      | id | created    |\n" +
+            "      | 12 | 01/01/2000 |\n" +
+            "", table.toString());
+    }
+
 
     @Test
     public void converts_list_of_beans_with_null_to_table() {
@@ -213,6 +238,17 @@ public class ToDataTableTest {
                 AnEnum.class
         );
         assertEquals("[yes, null]", actual.toString());
+    }
+
+    // No setters
+    public static class RelationPojo {
+        public Integer id;
+        public UserPojo user;
+        public Date created;
+        public Set<String> tags = new HashSet<String>();
+
+        public RelationPojo() {
+        }
     }
 
     // No setters
